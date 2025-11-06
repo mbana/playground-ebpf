@@ -1,2 +1,3 @@
-# playground-ebpf
+# `playground-ebpf`
+
 eBPF playground.

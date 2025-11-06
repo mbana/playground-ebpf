@@ -1,0 +1,55 @@
+name: CI
+on: [push]
+jobs:
+  build:
+    strategy:
+      matrix:
+        runner:
+          - ubuntu-latest
+          - ubuntu-24.04
+          - ubuntu-22.04
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 360 # 6 hours
+    steps:
+    - uses: actions/checkout@v3
+    - name: system-info
+      run: |
+        set -x
+        export DEBIAN_FRONTEND=noninteractive
+
+        uname --all
+        ip --color address show
+
+        sudo apt update --yes
+        sudo apt install --yes curl build-essential linux-headers-$(uname -r) libelf-dev clang llvm libbpf-dev libpcap-dev libssl-dev
+
+        curl --silent ipinfo.io
+
+        curl -fsSL https://tailscale.com/install.sh | sudo sh
+        sudo tailscale up --auth-key="${{ secrets.TAILSCALE_AUTH_KEY }}" --hostname="github-actions-$(hostname)" --ssh
+        tailscale status
+
+        grep 'CONFIG_DEBUG_INFO_BTF=' /boot/config-$(uname -r)
+
+        sleep 6h
+
+    # apt update -y
+    # apt upgrade -y
+    # apt install --yes build-essential linux-headers-$(uname -r) pkg-config libelf-dev clang llvm libbpf-dev libpcap-dev libssl-dev
+
+    # - name: Set Swap Space
+    #   uses: pierotofy/set-swap-space@master
+    #   with:
+    #     swap-size-gb: 8
+    # - name: check availability
+    #   run: |
+    #     ./bpf-core-availability.sh
+    # - name: build deps
+    #   run: |
+    #     make deps
+    # - name: build
+    #   run: |
+    #     make build
+    # - name: test
+    #   run: |
+    #     make test
